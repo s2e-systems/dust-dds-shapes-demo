@@ -25,5 +25,3 @@ cdr = "0.2.4"
 
 [build-dependencies]
 dust_dds_gen = {version = "0.1" }
- = "src/main.rs"
-
