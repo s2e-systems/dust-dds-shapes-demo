@@ -25,8 +25,5 @@ cdr = "0.2.4"
 
 [build-dependencies]
 dust_dds_gen = {version = "0.1" }
-
-# [[bin]]
-# name = "dust_dds_shapes_demo"
-# path = "src/main.rs"
+ = "src/main.rs"
 
