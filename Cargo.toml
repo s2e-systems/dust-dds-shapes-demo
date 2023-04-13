@@ -14,8 +14,7 @@ keywords = ["dds", "rtps", "middleware", "network", "udp"]
 categories = ["api-bindings", "network-programming"]
 
 [dependencies]
-#dust_dds = { version = "0.2" }
-dust_dds = { path = "../dust-dds/dds" }
+dust_dds = { version = "0.2" }
 eframe = "0.21.0"
 image = { version = "0.24", features = ["png"] }
 periodic = "0.1.1"
