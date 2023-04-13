@@ -14,18 +14,20 @@ keywords = ["dds", "rtps", "middleware", "network", "udp"]
 categories = ["api-bindings", "network-programming"]
 
 [dependencies]
-dust_dds = { version = "0.2" }
-eframe = "=0.21.0"
+#dust_dds = { version = "0.2" }
+dust_dds = { path = "../dust-dds/dds" }
+eframe = "0.21.0"
 image = { version = "0.24", features = ["png"] }
 periodic = "0.1.1"
 
-serde = { version = "=1.0", default-features = false, features = ["derive"] }
-cdr = "=0.2.4"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+cdr = "0.2.4"
+
 
 [build-dependencies]
 dust_dds_gen = {version = "0.1" }
 
-[[bin]]
-name = "dust_dds_shapes_demo"
-path = "src/main.rs"
+# [[bin]]
+# name = "dust_dds_shapes_demo"
+# path = "src/main.rs"
 
