@@ -1,4 +1,4 @@
-#[derive(Debug, serde::Deserialize, serde::Serialize, dust_dds::topic_definition::type_support::DdsSerde, dust_dds::topic_definition::type_support::DdsType)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, dust_dds::DdsType)]
 pub struct ShapeType {
     #[key] pub color: String,
     pub x: i32,
