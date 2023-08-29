@@ -87,7 +87,7 @@ impl<T: ShapeProperties> AsShapeType for T {
             color,
             x: center.x as i32,
             y: center.y as i32,
-            shapesize: self.size() as i32,
+            shapesize: self.size().round() as i32,
         }
     }
 }
