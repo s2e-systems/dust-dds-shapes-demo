@@ -10,7 +10,7 @@ use dust_dds::{
             HistoryQosPolicy, HistoryQosPolicyKind, ReliabilityQosPolicy, ReliabilityQosPolicyKind,
         },
         status::NO_STATUS,
-        time::{DurationKind},
+        time::DurationKind,
     },
     publication::{data_writer::DataWriter, publisher::Publisher},
     subscription::{
@@ -159,7 +159,7 @@ impl ShapesDemoApp {
                     shape_writer.write()
                 }
             },
-            periodic::Every::new(std::time::Duration::from_millis(200)),
+            periodic::Every::new(std::time::Duration::from_millis(25)),
         );
         planner.start();
 
@@ -180,7 +180,7 @@ impl ShapesDemoApp {
 
         let topic = self
             .participant
-            .create_topic::<ShapeType>(topic_name, QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataWriterQos {
@@ -231,7 +231,7 @@ impl ShapesDemoApp {
     fn create_reader(&mut self, topic_name: &str, is_reliable: bool) {
         let topic = self
             .participant
-            .create_topic::<ShapeType>(topic_name, QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataReaderQos {
