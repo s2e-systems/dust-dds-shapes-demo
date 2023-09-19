@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use dust_dds::{
     domain::{
         domain_participant::DomainParticipant, domain_participant_factory::DomainParticipantFactory,
@@ -10,7 +8,7 @@ use dust_dds::{
             HistoryQosPolicy, HistoryQosPolicyKind, ReliabilityQosPolicy, ReliabilityQosPolicyKind,
         },
         status::NO_STATUS,
-        time::{DurationKind},
+        time::DurationKind,
     },
     publication::{data_writer::DataWriter, publisher::Publisher},
     subscription::{
@@ -19,15 +17,19 @@ use dust_dds::{
         subscriber::Subscriber,
     },
 };
-
 use eframe::{
     egui::{self, Rect},
     epaint::{
         pos2, vec2, CircleShape, Color32, PathShape, Pos2, RectShape, Rounding, Shape, Stroke, Vec2,
     },
 };
+use std::sync::{Arc, Mutex};
 
-use crate::shapes_type::ShapeType;
+use self::shapes_type::ShapeType;
+
+mod shapes_type {
+    include!("../target/idl/shapes_type.rs");
+}
 
 const PURPLE: Color32 = Color32::from_rgb(128, 0, 128);
 const BLUE: Color32 = Color32::BLUE;
@@ -159,7 +161,7 @@ impl ShapesDemoApp {
                     shape_writer.write()
                 }
             },
-            periodic::Every::new(std::time::Duration::from_millis(200)),
+            periodic::Every::new(std::time::Duration::from_millis(20)),
         );
         planner.start();
 
@@ -180,7 +182,7 @@ impl ShapesDemoApp {
 
         let topic = self
             .participant
-            .create_topic::<ShapeType>(topic_name, QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataWriterQos {
@@ -231,7 +233,7 @@ impl ShapesDemoApp {
     fn create_reader(&mut self, topic_name: &str, is_reliable: bool) {
         let topic = self
             .participant
-            .create_topic::<ShapeType>(topic_name, QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataReaderQos {
@@ -273,8 +275,8 @@ impl ShapesDemoApp {
             ANY_INSTANCE_STATE,
         ) {
             if let Some(sample) = samples.first() {
-                previous_handle = Some(sample.sample_info.instance_handle);
-                if let Some(data) = &sample.data {
+                previous_handle = Some(sample.sample_info().instance_handle);
+                if let Some(data) = &sample.data() {
                     let color = match data.color.as_str() {
                         "PURPLE" => PURPLE,
                         "BLUE" => BLUE,
