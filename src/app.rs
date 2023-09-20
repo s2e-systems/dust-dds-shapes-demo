@@ -134,7 +134,8 @@ pub struct ShapesDemoApp {
     shape_writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
     window_open: Option<ShapeKind>,
     time: f64,
-    is_reliable: bool,
+    is_reliable_writer: bool,
+    is_reliable_reader: bool,
 }
 
 impl ShapesDemoApp {
@@ -173,7 +174,8 @@ impl ShapesDemoApp {
             shape_writer_list,
             window_open: None,
             time: 0.0,
-            is_reliable: true,
+            is_reliable_writer: true,
+            is_reliable_reader: false,
         }
     }
 
@@ -252,6 +254,9 @@ impl ShapesDemoApp {
                     kind: ReliabilityQosPolicyKind::BestEffort,
                     max_blocking_time: DurationKind::Infinite,
                 },
+                history: HistoryQosPolicy {
+                    kind: HistoryQosPolicyKind::KeepLast(1),
+                },
                 ..Default::default()
             }
         };
@@ -315,37 +320,37 @@ impl eframe::App for ShapesDemoApp {
             egui::Window::new("Publish").show(ctx, |ui| {
                 if ui.button("PURPLE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, PURPLE, self.is_reliable);
+                    self.create_writer(shape_kind, PURPLE, self.is_reliable_writer);
                 }
                 if ui.button("BLUE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, BLUE, self.is_reliable);
+                    self.create_writer(shape_kind, BLUE, self.is_reliable_writer);
                 }
                 if ui.button("RED").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, RED, self.is_reliable);
+                    self.create_writer(shape_kind, RED, self.is_reliable_writer);
                 }
                 if ui.button("GREEN").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, GREEN, self.is_reliable);
+                    self.create_writer(shape_kind, GREEN, self.is_reliable_writer);
                 }
                 if ui.button("YELLOW").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, YELLOW, self.is_reliable);
+                    self.create_writer(shape_kind, YELLOW, self.is_reliable_writer);
                 }
                 if ui.button("CYAN").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, CYAN, self.is_reliable);
+                    self.create_writer(shape_kind, CYAN, self.is_reliable_writer);
                 }
                 if ui.button("MAGENTA").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, MAGENTA, self.is_reliable);
+                    self.create_writer(shape_kind, MAGENTA, self.is_reliable_writer);
                 }
                 if ui.button("ORANGE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, ORANGE, self.is_reliable);
+                    self.create_writer(shape_kind, ORANGE, self.is_reliable_writer);
                 }
-                ui.checkbox(&mut self.is_reliable, "reliable");
+                ui.checkbox(&mut self.is_reliable_writer, "reliable");
             });
         }
 
@@ -363,15 +368,15 @@ impl eframe::App for ShapesDemoApp {
             ui.separator();
             ui.heading("Subscribe");
             if ui.button(ShapeKind::Square.as_str()).clicked() {
-                self.create_reader(ShapeKind::Square.as_str(), self.is_reliable)
+                self.create_reader(ShapeKind::Square.as_str(), self.is_reliable_reader)
             };
             if ui.button(ShapeKind::Circle.as_str()).clicked() {
-                self.create_reader(ShapeKind::Circle.as_str(), self.is_reliable)
+                self.create_reader(ShapeKind::Circle.as_str(), self.is_reliable_reader)
             };
             if ui.button(ShapeKind::Triangle.as_str()).clicked() {
-                self.create_reader(ShapeKind::Triangle.as_str(), self.is_reliable)
+                self.create_reader(ShapeKind::Triangle.as_str(), self.is_reliable_reader)
             };
-            ui.checkbox(&mut self.is_reliable, "reliable");
+            ui.checkbox(&mut self.is_reliable_reader, "reliable");
         });
         egui::CentralPanel::default().show(ctx, |ui| {
             let painter = ui.painter();
