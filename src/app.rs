@@ -8,7 +8,7 @@ use dust_dds::{
             HistoryQosPolicy, HistoryQosPolicyKind, ReliabilityQosPolicy, ReliabilityQosPolicyKind,
         },
         status::NO_STATUS,
-        time::DurationKind,
+        time::DurationKind, listeners::NoOpListener,
     },
     publication::{data_writer::DataWriter, publisher::Publisher},
     subscription::{
@@ -143,13 +143,13 @@ impl ShapesDemoApp {
         let domain_id = 0;
         let participant_factory = DomainParticipantFactory::get_instance();
         let participant = participant_factory
-            .create_participant(domain_id, QosKind::Default, None, NO_STATUS)
+            .create_participant(domain_id, QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
         let publisher = participant
-            .create_publisher(QosKind::Default, None, NO_STATUS)
+            .create_publisher(QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
         let subscriber = participant
-            .create_subscriber(QosKind::Default, None, NO_STATUS)
+            .create_subscriber(QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
 
         let mut planner = periodic::Planner::new();
@@ -184,7 +184,7 @@ impl ShapesDemoApp {
 
         let topic = self
             .participant
-            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataWriterQos {
@@ -205,7 +205,7 @@ impl ShapesDemoApp {
         };
         let writer = self
             .publisher
-            .create_datawriter(&topic, QosKind::Specific(qos), None, NO_STATUS)
+            .create_datawriter(&topic, QosKind::Specific(qos), NoOpListener::new(), NO_STATUS)
             .unwrap();
 
         let velocity = vec2(30.0, 30.0);
@@ -235,7 +235,7 @@ impl ShapesDemoApp {
     fn create_reader(&mut self, topic_name: &str, is_reliable: bool) {
         let topic = self
             .participant
-            .create_topic(topic_name, "ShapeType", QosKind::Default, None, NO_STATUS)
+            .create_topic(topic_name, "ShapeType", QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
         let qos = if is_reliable {
             DataReaderQos {
@@ -262,7 +262,7 @@ impl ShapesDemoApp {
         };
         let reader = self
             .subscriber
-            .create_datareader(&topic, QosKind::Specific(qos), None, NO_STATUS)
+            .create_datareader(&topic, QosKind::Specific(qos), NoOpListener::new(), NO_STATUS)
             .unwrap();
         self.reader_list.push(reader);
     }
@@ -281,7 +281,7 @@ impl ShapesDemoApp {
         ) {
             if let Some(sample) = samples.first() {
                 previous_handle = Some(sample.sample_info().instance_handle);
-                if let Some(data) = &sample.data() {
+                if let Ok(data) = sample.data() {
                     let color = match data.color.as_str() {
                         "PURPLE" => PURPLE,
                         "BLUE" => BLUE,
