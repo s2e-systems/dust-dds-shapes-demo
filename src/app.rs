@@ -89,7 +89,7 @@ impl<T: ShapeProperties> AsShapeType for T {
             color,
             x: center.x as i32,
             y: center.y as i32,
-            shapesize: self.size() as i32,
+            shapesize: self.size().round() as i32,
         }
     }
 }
@@ -162,7 +162,7 @@ impl ShapesDemoApp {
                     shape_writer.write()
                 }
             },
-            periodic::Every::new(std::time::Duration::from_millis(20)),
+            periodic::Every::new(std::time::Duration::from_millis(25)),
         );
         planner.start();
 
