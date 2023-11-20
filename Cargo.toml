@@ -14,14 +14,10 @@ keywords = ["dds", "rtps", "middleware", "network", "udp"]
 categories = ["api-bindings", "network-programming"]
 
 [dependencies]
-dust_dds = { version = "0.4" }
+dust_dds = { version = "0.5" }
 eframe = "0.21.0"
 image = { version = "0.24", features = ["png"] }
 periodic = "0.1.1"
 
-serde = { version = "1.0", default-features = false, features = ["derive"] }
-cdr = "0.2.4"
-
-
 [build-dependencies]
-dust_dds_gen = {version = "0.4" }
+dust_dds_gen = {version = "0.5" }
