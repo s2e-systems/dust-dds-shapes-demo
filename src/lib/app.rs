@@ -31,22 +31,6 @@ pub struct ShapeType {
     pub shapesize: i32,
 }
 
-#[derive(Clone, Copy)]
-pub enum ShapeKind {
-    Circle,
-    Triangle,
-    Square,
-}
-
-impl ShapeKind {
-    fn as_str(&self) -> &'_ str {
-        match self {
-            ShapeKind::Square => "Square",
-            ShapeKind::Circle => "Circle",
-            ShapeKind::Triangle => "Triangle",
-        }
-    }
-}
 
 struct ShapeWriter {
     writer: DataWriter<ShapeType>,
@@ -65,7 +49,7 @@ pub struct ShapesDemoApp {
     subscriber: Subscriber,
     reader_list: Vec<DataReader<ShapeType>>,
     shape_writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
-    window_open: Option<ShapeKind>,
+    window_open: Option<String>,
     time: f64,
     is_reliable_writer: bool,
     is_reliable_reader: bool,
@@ -112,7 +96,7 @@ impl ShapesDemoApp {
         }
     }
 
-    fn create_writer(&mut self, shape_kind: ShapeKind, color: &str, is_reliable: bool) {
+    fn create_writer(&mut self, shape_kind: String, color: &str, is_reliable: bool) {
         let topic_name = shape_kind.as_str();
 
         let topic = self
@@ -215,57 +199,27 @@ impl ShapesDemoApp {
         self.reader_list.push(reader);
     }
 
-    fn read_data(&self, reader: &DataReader<ShapeType>) -> Vec<GuiShape> {
-        let topic_name = reader.get_topicdescription().unwrap().get_name().unwrap();
-        let kind = match topic_name.as_str() {
-            "Square" => ShapeKind::Square,
-            "Circle" => ShapeKind::Circle,
-            "Triangle" => ShapeKind::Triangle,
-            _ => panic!("Unsupported shape"),
-        };
-
-        let mut shapes = vec![];
-        let mut previous_handle = None;
-        while let Ok(samples) = reader.read_next_instance(
-            1,
-            previous_handle,
-            ANY_SAMPLE_STATE,
-            ANY_VIEW_STATE,
-            ANY_INSTANCE_STATE,
-        ) {
-            if let Some(sample) = samples.first() {
-                previous_handle = Some(sample.sample_info().instance_handle);
-                if let Ok(shape_type) = sample.data() {
-                    let shape =
-                        GuiShape::from_shape_type(kind, &shape_type);
-                    shapes.push(shape);
-                }
-            }
-        }
-        shapes
-    }
-
     fn menu_panel(&mut self, ui: &mut egui::Ui) {
         ui.heading("Publish");
-        if ui.button(ShapeKind::Square.as_str()).clicked() {
-            self.window_open = Some(ShapeKind::Square);
+        if ui.button("Square").clicked() {
+            self.window_open = Some("Square".to_string());
         };
-        if ui.button(ShapeKind::Circle.as_str()).clicked() {
-            self.window_open = Some(ShapeKind::Circle);
+        if ui.button("Circle").clicked() {
+            self.window_open = Some("Circle".to_string());
         };
-        if ui.button(ShapeKind::Triangle.as_str()).clicked() {
-            self.window_open = Some(ShapeKind::Triangle);
+        if ui.button("Triangle").clicked() {
+            self.window_open = Some("Triangle".to_string());
         };
         ui.separator();
         ui.heading("Subscribe");
-        if ui.button(ShapeKind::Square.as_str()).clicked() {
-            self.create_reader(ShapeKind::Square.as_str(), self.is_reliable_reader)
+        if ui.button("Square").clicked() {
+            self.create_reader("Square", self.is_reliable_reader)
         };
-        if ui.button(ShapeKind::Circle.as_str()).clicked() {
-            self.create_reader(ShapeKind::Circle.as_str(), self.is_reliable_reader)
+        if ui.button("Circle").clicked() {
+            self.create_reader("Circle", self.is_reliable_reader)
         };
-        if ui.button(ShapeKind::Triangle.as_str()).clicked() {
-            self.create_reader(ShapeKind::Triangle.as_str(), self.is_reliable_reader)
+        if ui.button("Triangle").clicked() {
+            self.create_reader("Triangle", self.is_reliable_reader)
         };
         ui.checkbox(&mut self.is_reliable_reader, "reliable");
     }
@@ -273,39 +227,40 @@ impl ShapesDemoApp {
 
 impl eframe::App for ShapesDemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Some(shape_kind) = self.window_open {
+        if let Some(shape_kind) = &self.window_open {
+            let shape_kind = shape_kind.clone();
             egui::Window::new("Publish").show(ctx, |ui| {
                 if ui.button("PURPLE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "PURPLE", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "PURPLE", self.is_reliable_writer);
                 }
                 if ui.button("BLUE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "BLUE", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "BLUE", self.is_reliable_writer);
                 }
                 if ui.button("RED").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "RED", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "RED", self.is_reliable_writer);
                 }
                 if ui.button("GREEN").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "GREEN", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "GREEN", self.is_reliable_writer);
                 }
                 if ui.button("YELLOW").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "YELLOW", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "YELLOW", self.is_reliable_writer);
                 }
                 if ui.button("CYAN").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "CYAN", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "CYAN", self.is_reliable_writer);
                 }
                 if ui.button("MAGENTA").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "MAGENTA", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "MAGENTA", self.is_reliable_writer);
                 }
                 if ui.button("ORANGE").clicked() {
                     self.window_open = None;
-                    self.create_writer(shape_kind, "ORANGE", self.is_reliable_writer);
+                    self.create_writer(shape_kind.clone(), "ORANGE", self.is_reliable_writer);
                 }
                 ui.checkbox(&mut self.is_reliable_writer, "reliable");
             });
@@ -325,8 +280,23 @@ impl eframe::App for ShapesDemoApp {
 
             let mut shape_list = Vec::new();
             for reader in &self.reader_list {
-                for shape in self.read_data(reader) {
-                    shape_list.push(shape);
+                let kind = reader.get_topicdescription().unwrap().get_name().unwrap();
+                let mut previous_handle = None;
+                while let Ok(samples) = reader.read_next_instance(
+                    1,
+                    previous_handle,
+                    ANY_SAMPLE_STATE,
+                    ANY_VIEW_STATE,
+                    ANY_INSTANCE_STATE,
+                ) {
+                    if let Some(sample) = samples.first() {
+                        previous_handle = Some(sample.sample_info().instance_handle);
+                        if let Ok(shape_type) = sample.data() {
+                            let shape =
+                                GuiShape::from_shape_type(kind.clone(), &shape_type);
+                                shape_list.push(shape);
+                        }
+                    }
                 }
             }
 

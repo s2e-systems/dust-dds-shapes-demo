@@ -12,14 +12,14 @@ const ORANGE: egui::Color32 = egui::Color32::from_rgb(255, 165, 0);
 
 #[derive(Clone)]
 pub struct GuiShape {
-    kind: ShapeKind,
+    kind: String,
     color: egui::Color32,
     position: egui::Pos2,
     size: f32,
 }
 
 impl GuiShape {
-    pub fn from_shape_type(kind: ShapeKind, shape_type: &ShapeType) -> Self {
+    pub fn from_shape_type(kind: String, shape_type: &ShapeType) -> Self {
         let color = match shape_type.color.as_str() {
             "PURPLE" => PURPLE,
             "BLUE" => BLUE,
@@ -70,15 +70,15 @@ impl GuiShape {
         let position = self.position * scale;
         let size = self.size * scale;
 
-        match self.kind {
-            ShapeKind::Circle => egui::epaint::CircleShape {
+        match self.kind.as_str() {
+            "Circle" => egui::epaint::CircleShape {
                 center: position,
                 radius: size / 2.0,
                 fill: self.color,
                 stroke,
             }
             .into(),
-            ShapeKind::Triangle => egui::epaint::PathShape {
+            "Triangle" => egui::epaint::PathShape {
                 points: vec![
                     position + egui::vec2(0.0, -size / 2.0),
                     position + egui::vec2(-size / 2.0, size / 2.0),
@@ -89,13 +89,14 @@ impl GuiShape {
                 stroke,
             }
             .into(),
-            ShapeKind::Square => egui::epaint::RectShape::new(
+            "Square" => egui::epaint::RectShape::new(
                 egui::Rect::from_center_size(position, egui::epaint::vec2(size, size)),
                 egui::Rounding::ZERO,
                 self.color,
                 stroke,
             )
             .into(),
+            _ => panic!("shape kind not valid")
         }
     }
 }
@@ -167,12 +168,6 @@ impl<'a> ShapesWidget<'a> {
         let desired_size = self.original_size * scale;
         let (response, painter) = ui.allocate_painter(desired_size, egui::Sense::hover());
         painter.rect_filled(response.rect, egui::Rounding::ZERO, egui::Color32::WHITE);
-        painter.rect_stroke(
-            response.rect,
-            egui::Rounding::ZERO,
-            (0.5, egui::Color32::BLACK),
-        );
-
         for shape in self.shape_list {
             let mut shape = shape.as_shape(scale);
             shape.translate(response.rect.left_top().to_vec2());
