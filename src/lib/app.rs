@@ -1,3 +1,4 @@
+use super::shapes_widget::{GuiShape, MovingShapeObject, ShapesWidget};
 use dust_dds::{
     domain::{
         domain_participant::DomainParticipant, domain_participant_factory::DomainParticipantFactory,
@@ -18,13 +19,8 @@ use dust_dds::{
         subscriber::Subscriber,
     },
 };
-use eframe::{
-    egui,
-    epaint::{vec2, Color32},
-};
+use eframe::{egui, epaint::vec2};
 use std::sync::{Arc, Mutex};
-
-use super::shapes_widget::{MovingShapeObject, ShapesWidget};
 
 #[derive(Debug, Clone, dust_dds::topic_definition::type_support::DdsType)]
 pub struct ShapeType {
@@ -34,8 +30,6 @@ pub struct ShapeType {
     pub y: i32,
     pub shapesize: i32,
 }
-
-
 
 #[derive(Clone, Copy)]
 pub enum ShapeKind {
@@ -60,7 +54,7 @@ struct ShapeWriter {
 }
 impl ShapeWriter {
     fn write(&self) {
-        let data = (&self.shape).into();
+        let data = self.shape.gui_shape().as_shape_type();
         self.writer.write(&data, None).expect("writing failed");
     }
 }
@@ -165,7 +159,11 @@ impl ShapesDemoApp {
             y: 80,
             shapesize: 30,
         };
-        let shape = MovingShapeObject::from_shape_type(shape_kind, shape_type, velocity);
+
+        let shape = MovingShapeObject::new(
+            GuiShape::from_shape_type(shape_kind, shape_type),
+            velocity,
+        );
 
         let shape_writer = ShapeWriter { writer, shape };
         self.shape_writer_list.lock().unwrap().push(shape_writer);
@@ -217,7 +215,7 @@ impl ShapesDemoApp {
         self.reader_list.push(reader);
     }
 
-    fn read_data(&self, reader: &DataReader<ShapeType>) -> Vec<MovingShapeObject> {
+    fn read_data(&self, reader: &DataReader<ShapeType>) -> Vec<GuiShape> {
         let topic_name = reader.get_topicdescription().unwrap().get_name().unwrap();
         let kind = match topic_name.as_str() {
             "Square" => ShapeKind::Square,
@@ -239,7 +237,7 @@ impl ShapesDemoApp {
                 previous_handle = Some(sample.sample_info().instance_handle);
                 if let Ok(shape_type) = sample.data() {
                     let shape =
-                        MovingShapeObject::from_shape_type(kind, &shape_type, egui::Vec2::ZERO);
+                        GuiShape::from_shape_type(kind, &shape_type);
                     shapes.push(shape);
                 }
             }
@@ -337,7 +335,7 @@ impl eframe::App for ShapesDemoApp {
             self.time = time;
             for writer in self.shape_writer_list.lock().unwrap().iter_mut() {
                 writer.shape.move_within_rect(rect_size, time_delta * 40.0);
-                shape_list.push(writer.shape.clone());
+                shape_list.push(writer.shape.gui_shape().clone());
             }
             ui.add(ShapesWidget::new(rect_size, shape_list.as_slice()));
             ctx.request_repaint_after(std::time::Duration::from_millis(40));
