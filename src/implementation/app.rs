@@ -133,7 +133,7 @@ impl ShapesDemoApp {
             )
             .unwrap();
 
-        let velocity = vec2(1.0, 1.0);
+        let velocity = vec2(30.0, 20.0);
         let shape_type = &ShapeType {
             color: color.to_string(),
             x: 100,
@@ -266,7 +266,7 @@ impl eframe::App for ShapesDemoApp {
 
         if is_landscape {
             egui::SidePanel::left("menu_panel")
-                .default_width(100.0)
+                .max_width(100.0).resizable(false)
                 .show(ctx, |ui| self.menu_panel(ui));
         } else {
             egui::TopBottomPanel::top("menu_panel").show(ctx, |ui| self.menu_panel(ui));
@@ -301,7 +301,7 @@ impl eframe::App for ShapesDemoApp {
             let time_delta = (time - self.time) as f32;
             self.time = time;
             for writer in self.shape_writer_list.lock().unwrap().iter_mut() {
-                writer.shape.move_within_rect(rect_size, time_delta * 40.0);
+                writer.shape.move_within_rect(rect_size, time_delta);
                 shape_list.push(writer.shape.gui_shape().clone());
             }
             ui.add(ShapesWidget::new(rect_size, shape_list.as_slice()));
