@@ -35,14 +35,7 @@ pub struct ShapeType {
     pub shapesize: i32,
 }
 
-pub const PURPLE: Color32 = Color32::from_rgb(128, 0, 128);
-pub const BLUE: Color32 = Color32::BLUE;
-pub const RED: Color32 = Color32::RED;
-pub const GREEN: Color32 = Color32::GREEN;
-pub const YELLOW: Color32 = Color32::YELLOW;
-pub const CYAN: Color32 = Color32::from_rgb(0, 255, 255);
-pub const MAGENTA: Color32 = Color32::from_rgb(255, 0, 255);
-pub const ORANGE: Color32 = Color32::from_rgb(255, 165, 0);
+
 
 #[derive(Clone, Copy)]
 pub enum ShapeKind {

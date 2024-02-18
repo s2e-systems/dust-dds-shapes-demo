@@ -1,5 +1,14 @@
-use super::app::{self, ShapeKind, ShapeType};
+use super::app::{ShapeKind, ShapeType};
 use eframe::egui::{self};
+
+const PURPLE: egui::Color32 = egui::Color32::from_rgb(128, 0, 128);
+const BLUE: egui::Color32 = egui::Color32::BLUE;
+const RED: egui::Color32 = egui::Color32::RED;
+const GREEN: egui::Color32 = egui::Color32::GREEN;
+const YELLOW: egui::Color32 = egui::Color32::YELLOW;
+const CYAN: egui::Color32 = egui::Color32::from_rgb(0, 255, 255);
+const MAGENTA: egui::Color32 = egui::Color32::from_rgb(255, 0, 255);
+const ORANGE: egui::Color32 = egui::Color32::from_rgb(255, 165, 0);
 
 #[derive(Clone)]
 pub struct MovingShapeObject {
@@ -12,14 +21,14 @@ pub struct MovingShapeObject {
 impl From<&MovingShapeObject> for ShapeType {
     fn from(value: &MovingShapeObject) -> Self {
         let color = match value.color {
-            app::PURPLE => "PURPLE",
-            app::BLUE => "BLUE",
-            app::RED => "RED",
-            app::GREEN => "GREEN",
-            app::YELLOW => "YELLOW",
-            app::CYAN => "CYAN",
-            app::MAGENTA => "MAGENTA",
-            app::ORANGE => "ORANGE",
+            PURPLE => "PURPLE",
+            BLUE => "BLUE",
+            RED => "RED",
+            GREEN => "GREEN",
+            YELLOW => "YELLOW",
+            CYAN => "CYAN",
+            MAGENTA => "MAGENTA",
+            ORANGE => "ORANGE",
             _ => panic!("Color not valid"),
         }
         .to_string();
@@ -34,14 +43,14 @@ impl From<&MovingShapeObject> for ShapeType {
 impl MovingShapeObject {
     pub fn from_shape_type(kind: ShapeKind, shape_type: &ShapeType, velocity: egui::Vec2) -> Self {
         let color = match shape_type.color.as_str() {
-            "PURPLE" => app::PURPLE,
-            "BLUE" => app::BLUE,
-            "RED" => app::RED,
-            "GREEN" => app::GREEN,
-            "YELLOW" => app::YELLOW,
-            "CYAN" => app::CYAN,
-            "MAGENTA" => app::MAGENTA,
-            "ORANGE" => app::ORANGE,
+            "PURPLE" => PURPLE,
+            "BLUE" => BLUE,
+            "RED" => RED,
+            "GREEN" => GREEN,
+            "YELLOW" => YELLOW,
+            "CYAN" => CYAN,
+            "MAGENTA" => MAGENTA,
+            "ORANGE" => ORANGE,
             _ => panic!("color not supported"),
         };
         Self {
@@ -80,7 +89,6 @@ impl MovingShapeObject {
         self.position += self.velocity * time_delta;
     }
 }
-
 
 pub struct ShapesWidget<'a> {
     original_size: egui::Vec2,
@@ -121,7 +129,6 @@ impl<'a> ShapesWidget<'a> {
     }
 }
 
-
 fn moving_shape_to_shape(moving_shape: &MovingShapeObject, scale: f32) -> egui::Shape {
     let stroke = egui::Stroke {
         width: 0.5,
@@ -142,10 +149,8 @@ fn moving_shape_to_shape(moving_shape: &MovingShapeObject, scale: f32) -> egui::
         ShapeKind::Triangle => egui::epaint::PathShape {
             points: vec![
                 position + egui::vec2(0.0, -size / 2.0),
-                position
-                    + egui::vec2(-size / 2.0, size / 2.0),
-                position
-                    + egui::vec2(size / 2.0, size / 2.0),
+                position + egui::vec2(-size / 2.0, size / 2.0),
+                position + egui::vec2(size / 2.0, size / 2.0),
             ],
             closed: true,
             fill: moving_shape.color,
@@ -153,10 +158,7 @@ fn moving_shape_to_shape(moving_shape: &MovingShapeObject, scale: f32) -> egui::
         }
         .into(),
         ShapeKind::Square => egui::epaint::RectShape::new(
-            egui::Rect::from_center_size(
-                position,
-                egui::epaint::vec2(size, size),
-            ),
+            egui::Rect::from_center_size(position, egui::epaint::vec2(size, size)),
             egui::Rounding::ZERO,
             moving_shape.color,
             stroke,
@@ -164,7 +166,6 @@ fn moving_shape_to_shape(moving_shape: &MovingShapeObject, scale: f32) -> egui::
         .into(),
     }
 }
-
 
 impl<'a> egui::Widget for ShapesWidget<'a> {
     fn ui(self, ui: &mut eframe::egui::Ui) -> eframe::egui::Response {
