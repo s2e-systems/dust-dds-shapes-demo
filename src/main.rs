@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-mod lib;
+mod implementation;
 
 fn main() -> Result<(), eframe::Error> {
     const ICON: &[u8] = include_bytes!("../res/logo.png");
@@ -19,6 +19,6 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "Dust DDS Shapes Demo",
         options,
-        Box::new(|_cc| Box::new(lib::app::ShapesDemoApp::new())),
+        Box::new(|_cc| Box::new(implementation::app::ShapesDemoApp::new())),
     )
 }

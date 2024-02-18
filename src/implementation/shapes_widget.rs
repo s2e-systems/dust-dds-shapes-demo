@@ -1,5 +1,6 @@
-use super::app::{ShapeKind, ShapeType};
 use eframe::egui::{self};
+
+use super::app::shapes_type::ShapeType;
 
 const PURPLE: egui::Color32 = egui::Color32::from_rgb(128, 0, 128);
 const BLUE: egui::Color32 = egui::Color32::BLUE;

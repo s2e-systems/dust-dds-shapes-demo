@@ -1,3 +1,8 @@
+
+pub mod shapes_type {
+    include!("../../target/idl/shapes_type.rs");
+}
+
 use super::shapes_widget::{GuiShape, MovingShapeObject, ShapesWidget};
 use dust_dds::{
     domain::{
@@ -21,15 +26,7 @@ use dust_dds::{
 };
 use eframe::{egui, epaint::vec2};
 use std::sync::{Arc, Mutex};
-
-#[derive(Debug, Clone, dust_dds::topic_definition::type_support::DdsType)]
-pub struct ShapeType {
-    #[dust_dds(key)]
-    pub color: String,
-    pub x: i32,
-    pub y: i32,
-    pub shapesize: i32,
-}
+use self::shapes_type::ShapeType;
 
 
 struct ShapeWriter {
