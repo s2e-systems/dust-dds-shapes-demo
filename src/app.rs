@@ -3,12 +3,13 @@ use dust_dds::{
         domain_participant::DomainParticipant, domain_participant_factory::DomainParticipantFactory,
     },
     infrastructure::{
+        listeners::NoOpListener,
         qos::{DataReaderQos, DataWriterQos, QosKind},
         qos_policy::{
             HistoryQosPolicy, HistoryQosPolicyKind, ReliabilityQosPolicy, ReliabilityQosPolicyKind,
         },
         status::NO_STATUS,
-        time::DurationKind, listeners::NoOpListener,
+        time::DurationKind,
     },
     publication::{data_writer::DataWriter, publisher::Publisher},
     subscription::{
@@ -184,7 +185,13 @@ impl ShapesDemoApp {
 
         let topic = self
             .participant
-            .create_topic(topic_name, "ShapeType", QosKind::Default, NoOpListener::new(), NO_STATUS)
+            .create_topic::<ShapeType>(
+                topic_name,
+                "ShapeType",
+                QosKind::Default,
+                NoOpListener::new(),
+                NO_STATUS,
+            )
             .unwrap();
         let qos = if is_reliable {
             DataWriterQos {
@@ -205,7 +212,12 @@ impl ShapesDemoApp {
         };
         let writer = self
             .publisher
-            .create_datawriter(&topic, QosKind::Specific(qos), NoOpListener::new(), NO_STATUS)
+            .create_datawriter(
+                &topic,
+                QosKind::Specific(qos),
+                NoOpListener::new(),
+                NO_STATUS,
+            )
             .unwrap();
 
         let velocity = vec2(30.0, 30.0);
@@ -235,7 +247,13 @@ impl ShapesDemoApp {
     fn create_reader(&mut self, topic_name: &str, is_reliable: bool) {
         let topic = self
             .participant
-            .create_topic(topic_name, "ShapeType", QosKind::Default, NoOpListener::new(), NO_STATUS)
+            .create_topic::<ShapeType>(
+                topic_name,
+                "ShapeType",
+                QosKind::Default,
+                NoOpListener::new(),
+                NO_STATUS,
+            )
             .unwrap();
         let qos = if is_reliable {
             DataReaderQos {
@@ -262,7 +280,12 @@ impl ShapesDemoApp {
         };
         let reader = self
             .subscriber
-            .create_datareader(&topic, QosKind::Specific(qos), NoOpListener::new(), NO_STATUS)
+            .create_datareader(
+                &topic,
+                QosKind::Specific(qos),
+                NoOpListener::new(),
+                NO_STATUS,
+            )
             .unwrap();
         self.reader_list.push(reader);
     }
