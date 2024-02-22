@@ -62,7 +62,7 @@ impl GuiShape {
     }
 
 
-    pub fn as_shape(&self, scale: f32) -> egui::Shape {
+    pub fn as_egui_shape(&self, scale: f32) -> egui::Shape {
         let stroke = egui::Stroke {
             width: 0.5,
             color: egui::Color32::BLACK,
@@ -170,7 +170,7 @@ impl<'a> ShapesWidget<'a> {
         let (response, painter) = ui.allocate_painter(desired_size, egui::Sense::hover());
         painter.rect_filled(response.rect, egui::Rounding::ZERO, egui::Color32::WHITE);
         for shape in self.shape_list {
-            let mut shape = shape.as_shape(scale);
+            let mut shape = shape.as_egui_shape(scale);
             shape.translate(response.rect.left_top().to_vec2());
             painter.add(shape);
         }

@@ -1,8 +1,8 @@
-
 pub mod shapes_type {
     include!("../../target/idl/shapes_type.rs");
 }
 
+use self::shapes_type::ShapeType;
 use super::shapes_widget::{GuiShape, MovingShapeObject, ShapesWidget};
 use dust_dds::{
     domain::{
@@ -26,8 +26,6 @@ use dust_dds::{
 };
 use eframe::{egui, epaint::vec2};
 use std::sync::{Arc, Mutex};
-use self::shapes_type::ShapeType;
-
 
 struct ShapeWriter {
     writer: DataWriter<ShapeType>,
@@ -37,6 +35,56 @@ impl ShapeWriter {
     fn write(&self) {
         let data = self.shape.gui_shape().as_shape_type();
         self.writer.write(&data, None).expect("writing failed");
+    }
+}
+
+struct PublishWidget {
+    is_reliable: bool,
+    closed: bool,
+    selected_color: Option<String>,
+}
+
+impl PublishWidget {
+    fn new() -> Self {
+        Self {
+            is_reliable: false,
+            closed: true,
+            selected_color: None,
+        }
+    }
+
+    fn selected_color(&mut self) -> Option<String> {
+        self.selected_color.take()
+    }
+}
+
+impl egui::Widget for &mut PublishWidget {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        if ui.button("PURPLE").clicked() {
+            self.selected_color = Some("PURPLE".to_string());
+        }
+        if ui.button("BLUE").clicked() {
+            self.selected_color = Some("BLUE".to_string());
+        }
+        if ui.button("RED").clicked() {
+            self.selected_color = Some("RED".to_string());
+        }
+        if ui.button("GREEN").clicked() {
+            self.selected_color = Some("GREEN".to_string());
+        }
+        if ui.button("YELLOW").clicked() {
+            self.selected_color = Some("YELLOW".to_string());
+        }
+        if ui.button("CYAN").clicked() {
+            self.selected_color = Some("CYAN".to_string());
+        }
+        if ui.button("MAGENTA").clicked() {
+            self.selected_color = Some("MAGENTA".to_string());
+        }
+        if ui.button("ORANGE").clicked() {
+            self.selected_color = Some("ORANGE".to_string());
+        }
+        ui.checkbox(&mut self.is_reliable, "reliable")
     }
 }
 
@@ -50,6 +98,7 @@ pub struct ShapesDemoApp {
     time: f64,
     is_reliable_writer: bool,
     is_reliable_reader: bool,
+    publish_widget: PublishWidget,
 }
 
 impl ShapesDemoApp {
@@ -90,6 +139,7 @@ impl ShapesDemoApp {
             time: 0.0,
             is_reliable_writer: true,
             is_reliable_reader: false,
+            publish_widget: PublishWidget::new(),
         }
     }
 
@@ -141,10 +191,8 @@ impl ShapesDemoApp {
             shapesize: 30,
         };
 
-        let shape = MovingShapeObject::new(
-            GuiShape::from_shape_type(shape_kind, shape_type),
-            velocity,
-        );
+        let shape =
+            MovingShapeObject::new(GuiShape::from_shape_type(shape_kind, shape_type), velocity);
 
         let shape_writer = ShapeWriter { writer, shape };
         self.shape_writer_list.lock().unwrap().push(shape_writer);
@@ -224,49 +272,21 @@ impl ShapesDemoApp {
 
 impl eframe::App for ShapesDemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Some(shape_kind) = &self.window_open {
-            let shape_kind = shape_kind.clone();
+        if let Some(shape_kind) = self.window_open.clone() {
             egui::Window::new("Publish").show(ctx, |ui| {
-                if ui.button("PURPLE").clicked() {
+                ui.add(&mut self.publish_widget);
+                if let Some(color) = &self.publish_widget.selected_color() {
+                    self.create_writer(shape_kind.clone(), &color, self.is_reliable_writer);
                     self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "PURPLE", self.is_reliable_writer);
                 }
-                if ui.button("BLUE").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "BLUE", self.is_reliable_writer);
-                }
-                if ui.button("RED").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "RED", self.is_reliable_writer);
-                }
-                if ui.button("GREEN").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "GREEN", self.is_reliable_writer);
-                }
-                if ui.button("YELLOW").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "YELLOW", self.is_reliable_writer);
-                }
-                if ui.button("CYAN").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "CYAN", self.is_reliable_writer);
-                }
-                if ui.button("MAGENTA").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "MAGENTA", self.is_reliable_writer);
-                }
-                if ui.button("ORANGE").clicked() {
-                    self.window_open = None;
-                    self.create_writer(shape_kind.clone(), "ORANGE", self.is_reliable_writer);
-                }
-                ui.checkbox(&mut self.is_reliable_writer, "reliable");
             });
         }
         let is_landscape = ctx.screen_rect().aspect_ratio() > 1.0;
 
         if is_landscape {
             egui::SidePanel::left("menu_panel")
-                .max_width(100.0).resizable(false)
+                .max_width(100.0)
+                .resizable(false)
                 .show(ctx, |ui| self.menu_panel(ui));
         } else {
             egui::TopBottomPanel::top("menu_panel").show(ctx, |ui| self.menu_panel(ui));
@@ -289,9 +309,8 @@ impl eframe::App for ShapesDemoApp {
                     if let Some(sample) = samples.first() {
                         previous_handle = Some(sample.sample_info().instance_handle);
                         if let Ok(shape_type) = sample.data() {
-                            let shape =
-                                GuiShape::from_shape_type(kind.clone(), &shape_type);
-                                shape_list.push(shape);
+                            let shape = GuiShape::from_shape_type(kind.clone(), &shape_type);
+                            shape_list.push(shape);
                         }
                     }
                 }
