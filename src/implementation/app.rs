@@ -276,7 +276,7 @@ impl eframe::App for ShapesDemoApp {
                 .show(ctx, |ui| {
                     ui.add(&mut self.publish_widget);
                     if let Some(color) = &self.publish_widget.selected_color() {
-                        self.create_writer(shape_kind.clone(), &color, self.publish_widget.is_reliable);
+                        self.create_writer(shape_kind.clone(), color, self.publish_widget.is_reliable);
                         self.selected_shape = None;
                     }
                 });
