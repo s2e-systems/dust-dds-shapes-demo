@@ -40,7 +40,6 @@ impl ShapeWriter {
 
 struct PublishWidget {
     is_reliable: bool,
-    closed: bool,
     selected_color: Option<String>,
 }
 
@@ -48,7 +47,6 @@ impl PublishWidget {
     fn new() -> Self {
         Self {
             is_reliable: false,
-            closed: true,
             selected_color: None,
         }
     }
@@ -94,9 +92,8 @@ pub struct ShapesDemoApp {
     subscriber: Subscriber,
     reader_list: Vec<DataReader<ShapeType>>,
     shape_writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
-    window_open: Option<String>,
+    selected_shape: Option<String>,
     time: f64,
-    is_reliable_writer: bool,
     is_reliable_reader: bool,
     publish_widget: PublishWidget,
 }
@@ -135,9 +132,8 @@ impl ShapesDemoApp {
             subscriber,
             reader_list: vec![],
             shape_writer_list,
-            window_open: None,
+            selected_shape: None,
             time: 0.0,
-            is_reliable_writer: true,
             is_reliable_reader: false,
             publish_widget: PublishWidget::new(),
         }
@@ -173,6 +169,7 @@ impl ShapesDemoApp {
                 ..Default::default()
             }
         };
+        println!("Created {:?} writer", qos.reliability);
         let writer = self
             .publisher
             .create_datawriter(
@@ -247,13 +244,13 @@ impl ShapesDemoApp {
     fn menu_panel(&mut self, ui: &mut egui::Ui) {
         ui.heading("Publish");
         if ui.button("Square").clicked() {
-            self.window_open = Some("Square".to_string());
+            self.selected_shape = Some("Square".to_string());
         };
         if ui.button("Circle").clicked() {
-            self.window_open = Some("Circle".to_string());
+            self.selected_shape = Some("Circle".to_string());
         };
         if ui.button("Triangle").clicked() {
-            self.window_open = Some("Triangle".to_string());
+            self.selected_shape = Some("Triangle".to_string());
         };
         ui.separator();
         ui.heading("Subscribe");
@@ -272,14 +269,20 @@ impl ShapesDemoApp {
 
 impl eframe::App for ShapesDemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Some(shape_kind) = self.window_open.clone() {
-            egui::Window::new("Publish").show(ctx, |ui| {
-                ui.add(&mut self.publish_widget);
-                if let Some(color) = &self.publish_widget.selected_color() {
-                    self.create_writer(shape_kind.clone(), &color, self.is_reliable_writer);
-                    self.window_open = None;
-                }
-            });
+        if let Some(shape_kind) = self.selected_shape.clone() {
+            let mut open = true;
+            egui::Window::new("Publish")
+                .open(&mut open).collapsible(false).resizable(false)
+                .show(ctx, |ui| {
+                    ui.add(&mut self.publish_widget);
+                    if let Some(color) = &self.publish_widget.selected_color() {
+                        self.create_writer(shape_kind.clone(), &color, self.publish_widget.is_reliable);
+                        self.selected_shape = None;
+                    }
+                });
+            if !open {
+                self.selected_shape = None;
+            }
         }
         let is_landscape = ctx.screen_rect().aspect_ratio() > 1.0;
 
