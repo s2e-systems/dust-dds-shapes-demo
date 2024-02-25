@@ -38,21 +38,20 @@ impl ShapeWriter {
     }
 }
 
+#[derive(Clone)]
 struct PublishWidget {
+    selected_shape: String,
     is_reliable: bool,
     selected_color: Option<String>,
 }
 
 impl PublishWidget {
-    fn new() -> Self {
+    fn new(selected_shape: String) -> Self {
         Self {
+            selected_shape,
             is_reliable: false,
             selected_color: None,
         }
-    }
-
-    fn selected_color(&mut self) -> Option<String> {
-        self.selected_color.take()
     }
 }
 
@@ -92,10 +91,9 @@ pub struct ShapesDemoApp {
     subscriber: Subscriber,
     reader_list: Vec<DataReader<ShapeType>>,
     shape_writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
-    selected_shape: Option<String>,
     time: f64,
     is_reliable_reader: bool,
-    publish_widget: PublishWidget,
+    publish_widget: Option<PublishWidget>,
 }
 
 impl ShapesDemoApp {
@@ -132,10 +130,9 @@ impl ShapesDemoApp {
             subscriber,
             reader_list: vec![],
             shape_writer_list,
-            selected_shape: None,
             time: 0.0,
             is_reliable_reader: false,
-            publish_widget: PublishWidget::new(),
+            publish_widget: None,
         }
     }
 
@@ -169,7 +166,10 @@ impl ShapesDemoApp {
                 ..Default::default()
             }
         };
-        println!("Created {:?} writer", qos.reliability);
+        println!(
+            "Created {:?} writer with {:?} topic and color {:?}",
+            qos.reliability, topic_name, color
+        );
         let writer = self
             .publisher
             .create_datawriter(
@@ -244,13 +244,13 @@ impl ShapesDemoApp {
     fn menu_panel(&mut self, ui: &mut egui::Ui) {
         ui.heading("Publish");
         if ui.button("Square").clicked() {
-            self.selected_shape = Some("Square".to_string());
+            self.publish_widget = Some(PublishWidget::new("Square".to_string()));
         };
         if ui.button("Circle").clicked() {
-            self.selected_shape = Some("Circle".to_string());
+            self.publish_widget = Some(PublishWidget::new("Circle".to_string()));
         };
         if ui.button("Triangle").clicked() {
-            self.selected_shape = Some("Triangle".to_string());
+            self.publish_widget = Some(PublishWidget::new("Triangle".to_string()));
         };
         ui.separator();
         ui.heading("Subscribe");
@@ -269,21 +269,26 @@ impl ShapesDemoApp {
 
 impl eframe::App for ShapesDemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Some(shape_kind) = self.selected_shape.clone() {
+        if let Some(publish_widget) = &mut self.publish_widget {
             let mut open = true;
             egui::Window::new("Publish")
-                .open(&mut open).collapsible(false).resizable(false)
+                .open(&mut open)
+                .collapsible(false)
+                .resizable(false)
                 .show(ctx, |ui| {
-                    ui.add(&mut self.publish_widget);
-                    if let Some(color) = &self.publish_widget.selected_color() {
-                        self.create_writer(shape_kind.clone(), color, self.publish_widget.is_reliable);
-                        self.selected_shape = None;
-                    }
+                    ui.add(publish_widget);
                 });
             if !open {
-                self.selected_shape = None;
+                self.publish_widget = None;
             }
         }
+        if let Some(publish_widget) = &self.publish_widget {
+            if let Some(color) = &publish_widget.selected_color {
+                self.create_writer(publish_widget.selected_shape.clone(), &color.clone(), publish_widget.is_reliable);
+                self.publish_widget = None;
+            }
+        }
+
         let is_landscape = ctx.screen_rect().aspect_ratio() > 1.0;
 
         if is_landscape {
