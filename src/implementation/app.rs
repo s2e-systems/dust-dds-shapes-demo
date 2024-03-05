@@ -24,7 +24,10 @@ use dust_dds::{
         subscriber::Subscriber,
     },
 };
-use eframe::{egui::{self}, epaint::vec2};
+use eframe::{
+    egui::{self},
+    epaint::vec2,
+};
 use std::sync::{Arc, Mutex};
 
 struct ShapeWriter {
@@ -92,6 +95,33 @@ pub struct ShapesDemoApp {
     time: f64,
     is_reliable_reader: bool,
     publish_widget: Option<PublishWidget>,
+    planner: Planner,
+}
+
+struct Planner {
+    writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
+    rate: Arc<Mutex<u64>>,
+}
+
+impl Planner {
+    fn new(writer_list: Arc<Mutex<Vec<ShapeWriter>>>) -> Self {
+        Self {
+            writer_list,
+            rate: Arc::new(Mutex::new(25)),
+        }
+    }
+
+    fn start(&mut self) {
+        let writer_list_clone = self.writer_list.clone();
+        let rate_clone = self.rate.clone();
+        std::thread::spawn(move || loop {
+            let rate = *rate_clone.lock().unwrap();
+            for writer in writer_list_clone.lock().unwrap().iter() {
+                writer.write()
+            }
+            std::thread::sleep(std::time::Duration::from_millis(rate));
+        });
+    }
 }
 
 impl ShapesDemoApp {
@@ -108,18 +138,8 @@ impl ShapesDemoApp {
             .create_subscriber(QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
 
-        let mut planner = periodic::Planner::new();
-
-        let writer_list = Arc::new(Mutex::new(Vec::<ShapeWriter>::new()));
-        let writer_list_clone = writer_list.clone();
-        planner.add(
-            move || {
-                for writer in writer_list_clone.lock().unwrap().iter() {
-                    writer.write()
-                }
-            },
-            periodic::Every::new(std::time::Duration::from_millis(25)),
-        );
+        let writer_list = Arc::new(Mutex::new(Vec::new()));
+        let mut planner = Planner::new(writer_list.clone());
         planner.start();
 
         Self {
@@ -131,6 +151,7 @@ impl ShapesDemoApp {
             time: 0.0,
             is_reliable_reader: false,
             publish_widget: None,
+            planner,
         }
     }
 
@@ -250,6 +271,13 @@ impl ShapesDemoApp {
         if ui.button("Triangle").clicked() {
             self.publish_widget = Some(PublishWidget::new("Triangle".to_string()));
         };
+
+        ui.separator();
+        ui.label("Publish rate [ms]:");
+        let mut rate = *self.planner.rate.lock().unwrap();
+        ui.add(egui::Slider::new(&mut rate, 5..=500));
+        *self.planner.rate.lock().unwrap() = rate;
+
         ui.separator();
         ui.heading("Subscribe");
         if ui.button("Square").clicked() {
@@ -298,34 +326,44 @@ impl eframe::App for ShapesDemoApp {
                 .max_width(100.0)
                 .resizable(false)
                 .show(ctx, |ui| self.menu_panel(ui));
-            egui::TopBottomPanel::bottom("writer_list").min_height(100.0).show(ctx, |ui| {
-                egui::Grid::new("my_grid")
-                    .num_columns(4)
-                    .spacing([40.0, 4.0])
-                    .striped(true)
-                    .show(ui, |ui| {
-                        ui.label("");
-                        ui.label("Topic");
-                        ui.label("Color");
-                        ui.label("Reliability");
-                        ui.end_row();
-                        for shape_writer in self.writer_list.lock().unwrap().iter() {
-                            ui.label("writer");
-                            ui.label(shape_writer.writer.get_topic().unwrap().get_name().unwrap());
-                            ui.label(shape_writer.color());
-                            ui.label(reliability_kind(&shape_writer.writer.get_qos().unwrap().reliability.kind));
+            egui::TopBottomPanel::bottom("writer_list")
+                .min_height(100.0)
+                .show(ctx, |ui| {
+                    egui::Grid::new("my_grid")
+                        .num_columns(4)
+                        .spacing([40.0, 4.0])
+                        .striped(true)
+                        .show(ui, |ui| {
+                            ui.label("");
+                            ui.label("Topic");
+                            ui.label("Color");
+                            ui.label("Reliability");
                             ui.end_row();
-                        }
-                        ui.end_row();
-                        for reader in self.reader_list.iter() {
-                            ui.label("reader");
-                            ui.label(reader.get_topicdescription().unwrap().get_name().unwrap());
-                            ui.label("*");
-                            ui.label(reliability_kind(&reader.get_qos().unwrap().reliability.kind));
+                            for shape_writer in self.writer_list.lock().unwrap().iter() {
+                                ui.label("writer");
+                                ui.label(
+                                    shape_writer.writer.get_topic().unwrap().get_name().unwrap(),
+                                );
+                                ui.label(shape_writer.color());
+                                ui.label(reliability_kind(
+                                    &shape_writer.writer.get_qos().unwrap().reliability.kind,
+                                ));
+                                ui.end_row();
+                            }
                             ui.end_row();
-                        }
-                    })
-            });
+                            for reader in self.reader_list.iter() {
+                                ui.label("reader");
+                                ui.label(
+                                    reader.get_topicdescription().unwrap().get_name().unwrap(),
+                                );
+                                ui.label("*");
+                                ui.label(reliability_kind(
+                                    &reader.get_qos().unwrap().reliability.kind,
+                                ));
+                                ui.end_row();
+                            }
+                        })
+                });
         } else {
             egui::TopBottomPanel::top("menu_panel").show(ctx, |ui| self.menu_panel(ui));
         }
