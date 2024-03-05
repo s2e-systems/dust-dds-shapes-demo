@@ -100,6 +100,7 @@ impl GuiShape {
             _ => panic!("shape kind not valid")
         }
     }
+
 }
 
 #[derive(Clone)]

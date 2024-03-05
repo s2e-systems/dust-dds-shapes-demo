@@ -24,7 +24,7 @@ use dust_dds::{
         subscriber::Subscriber,
     },
 };
-use eframe::{egui, epaint::vec2};
+use eframe::{egui::{self}, epaint::vec2};
 use std::sync::{Arc, Mutex};
 
 struct ShapeWriter {
@@ -35,6 +35,15 @@ impl ShapeWriter {
     fn write(&self) {
         let data = self.shape.gui_shape().as_shape_type();
         self.writer.write(&data, None).expect("writing failed");
+    }
+    fn color(&self) -> String {
+        self.shape.gui_shape().as_shape_type().color.clone()
+    }
+}
+fn reliability_kind(kind: &ReliabilityQosPolicyKind) -> &'static str {
+    match kind {
+        ReliabilityQosPolicyKind::BestEffort => "Best effort",
+        ReliabilityQosPolicyKind::Reliable => "Reliable",
     }
 }
 
@@ -53,34 +62,23 @@ impl PublishWidget {
             selected_color: None,
         }
     }
+    fn add_button(&mut self, ui: &mut egui::Ui, color: &str) {
+        if ui.button(color).clicked() {
+            self.selected_color = Some(color.to_string());
+        }
+    }
 }
 
 impl egui::Widget for &mut PublishWidget {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        if ui.button("PURPLE").clicked() {
-            self.selected_color = Some("PURPLE".to_string());
-        }
-        if ui.button("BLUE").clicked() {
-            self.selected_color = Some("BLUE".to_string());
-        }
-        if ui.button("RED").clicked() {
-            self.selected_color = Some("RED".to_string());
-        }
-        if ui.button("GREEN").clicked() {
-            self.selected_color = Some("GREEN".to_string());
-        }
-        if ui.button("YELLOW").clicked() {
-            self.selected_color = Some("YELLOW".to_string());
-        }
-        if ui.button("CYAN").clicked() {
-            self.selected_color = Some("CYAN".to_string());
-        }
-        if ui.button("MAGENTA").clicked() {
-            self.selected_color = Some("MAGENTA".to_string());
-        }
-        if ui.button("ORANGE").clicked() {
-            self.selected_color = Some("ORANGE".to_string());
-        }
+        self.add_button(ui, "PURPLE");
+        self.add_button(ui, "BLUE");
+        self.add_button(ui, "RED");
+        self.add_button(ui, "GREEN");
+        self.add_button(ui, "YELLOW");
+        self.add_button(ui, "CYAN");
+        self.add_button(ui, "MAGENTA");
+        self.add_button(ui, "ORANGE");
         ui.checkbox(&mut self.is_reliable, "reliable")
     }
 }
@@ -90,7 +88,7 @@ pub struct ShapesDemoApp {
     publisher: Publisher,
     subscriber: Subscriber,
     reader_list: Vec<DataReader<ShapeType>>,
-    shape_writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
+    writer_list: Arc<Mutex<Vec<ShapeWriter>>>,
     time: f64,
     is_reliable_reader: bool,
     publish_widget: Option<PublishWidget>,
@@ -112,12 +110,12 @@ impl ShapesDemoApp {
 
         let mut planner = periodic::Planner::new();
 
-        let shape_writer_list = Arc::new(Mutex::new(Vec::<ShapeWriter>::new()));
-        let shape_writer_list_clone = shape_writer_list.clone();
+        let writer_list = Arc::new(Mutex::new(Vec::<ShapeWriter>::new()));
+        let writer_list_clone = writer_list.clone();
         planner.add(
             move || {
-                for shape_writer in shape_writer_list_clone.lock().unwrap().iter() {
-                    shape_writer.write()
+                for writer in writer_list_clone.lock().unwrap().iter() {
+                    writer.write()
                 }
             },
             periodic::Every::new(std::time::Duration::from_millis(25)),
@@ -129,7 +127,7 @@ impl ShapesDemoApp {
             publisher,
             subscriber,
             reader_list: vec![],
-            shape_writer_list,
+            writer_list,
             time: 0.0,
             is_reliable_reader: false,
             publish_widget: None,
@@ -192,7 +190,7 @@ impl ShapesDemoApp {
             MovingShapeObject::new(GuiShape::from_shape_type(shape_kind, shape_type), velocity);
 
         let shape_writer = ShapeWriter { writer, shape };
-        self.shape_writer_list.lock().unwrap().push(shape_writer);
+        self.writer_list.lock().unwrap().push(shape_writer);
     }
 
     fn create_reader(&mut self, topic_name: &str, is_reliable: bool) {
@@ -284,7 +282,11 @@ impl eframe::App for ShapesDemoApp {
         }
         if let Some(publish_widget) = &self.publish_widget {
             if let Some(color) = &publish_widget.selected_color {
-                self.create_writer(publish_widget.selected_shape.clone(), &color.clone(), publish_widget.is_reliable);
+                self.create_writer(
+                    publish_widget.selected_shape.clone(),
+                    &color.clone(),
+                    publish_widget.is_reliable,
+                );
                 self.publish_widget = None;
             }
         }
@@ -296,6 +298,34 @@ impl eframe::App for ShapesDemoApp {
                 .max_width(100.0)
                 .resizable(false)
                 .show(ctx, |ui| self.menu_panel(ui));
+            egui::TopBottomPanel::bottom("writer_list").min_height(100.0).show(ctx, |ui| {
+                egui::Grid::new("my_grid")
+                    .num_columns(4)
+                    .spacing([40.0, 4.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("");
+                        ui.label("Topic");
+                        ui.label("Color");
+                        ui.label("Reliability");
+                        ui.end_row();
+                        for shape_writer in self.writer_list.lock().unwrap().iter() {
+                            ui.label("writer");
+                            ui.label(shape_writer.writer.get_topic().unwrap().get_name().unwrap());
+                            ui.label(shape_writer.color());
+                            ui.label(reliability_kind(&shape_writer.writer.get_qos().unwrap().reliability.kind));
+                            ui.end_row();
+                        }
+                        ui.end_row();
+                        for reader in self.reader_list.iter() {
+                            ui.label("reader");
+                            ui.label(reader.get_topicdescription().unwrap().get_name().unwrap());
+                            ui.label("*");
+                            ui.label(reliability_kind(&reader.get_qos().unwrap().reliability.kind));
+                            ui.end_row();
+                        }
+                    })
+            });
         } else {
             egui::TopBottomPanel::top("menu_panel").show(ctx, |ui| self.menu_panel(ui));
         }
@@ -327,11 +357,12 @@ impl eframe::App for ShapesDemoApp {
             let time = ui.input(|i| i.time);
             let time_delta = (time - self.time) as f32;
             self.time = time;
-            for writer in self.shape_writer_list.lock().unwrap().iter_mut() {
+            for writer in self.writer_list.lock().unwrap().iter_mut() {
                 writer.shape.move_within_rect(rect_size, time_delta);
                 shape_list.push(writer.shape.gui_shape().clone());
             }
             ui.add(ShapesWidget::new(rect_size, shape_list.as_slice()));
+
             ctx.request_repaint_after(std::time::Duration::from_millis(40));
         });
     }
