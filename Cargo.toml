@@ -13,10 +13,24 @@ repository = "https://github.com/s2e-systems/dust-dds"
 keywords = ["dds", "rtps", "middleware", "network", "udp"]
 categories = ["api-bindings", "network-programming"]
 
+[lib]
+path = "src/android.rs"
+crate_type = ["cdylib"]
+name="android"
+
+[[bin]]
+path="src/desktop.rs"
+name="dust-dds-shapes-demo"
+
 [dependencies]
-dust_dds = { version = "0.7" }
+dust_dds = { version = "0.8" }
 eframe = "0.26"
 image = { version = "0.24", features = ["png"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+log = "0.4"
+winit = { version = "0.29", features = [ "android-native-activity" ] }
+android_logger = "0.13.1"
 
 [build-dependencies]
 dust_dds_gen = { version = "0.7" }

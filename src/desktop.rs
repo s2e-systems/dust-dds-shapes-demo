@@ -2,6 +2,7 @@
 
 mod implementation;
 
+#[cfg(not(target_os = "android"))]
 fn main() -> Result<(), eframe::Error> {
     const ICON: &[u8] = include_bytes!("../res/logo.png");
     let icon = eframe::icon_data::from_png_bytes(ICON)

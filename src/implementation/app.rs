@@ -342,7 +342,7 @@ impl eframe::App for ShapesDemoApp {
                             for shape_writer in self.writer_list.lock().unwrap().iter() {
                                 ui.label("writer");
                                 ui.label(
-                                    shape_writer.writer.get_topic().unwrap().get_name().unwrap(),
+                                    shape_writer.writer.get_topic().get_name(),
                                 );
                                 ui.label(shape_writer.color());
                                 ui.label(reliability_kind(
@@ -354,7 +354,7 @@ impl eframe::App for ShapesDemoApp {
                             for reader in self.reader_list.iter() {
                                 ui.label("reader");
                                 ui.label(
-                                    reader.get_topicdescription().unwrap().get_name().unwrap(),
+                                    reader.get_topicdescription().get_name(),
                                 );
                                 ui.label("*");
                                 ui.label(reliability_kind(
@@ -373,7 +373,7 @@ impl eframe::App for ShapesDemoApp {
 
             let mut shape_list = Vec::new();
             for reader in &self.reader_list {
-                let kind = reader.get_topicdescription().unwrap().get_name().unwrap();
+                let kind = reader.get_topicdescription().get_name();
                 let mut previous_handle = None;
                 while let Ok(samples) = reader.read_next_instance(
                     1,
