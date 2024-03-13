@@ -1,5 +1,5 @@
 pub mod shapes_type {
-    include!("../../target/idl/shapes_type.rs");
+    include!("../target/idl/shapes_type.rs");
 }
 
 use self::shapes_type::ShapeType;

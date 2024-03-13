@@ -1,9 +1,5 @@
-mod implementation;
-
-#[cfg(target_os = "android")]
 use winit::platform::android::activity::AndroidApp;
 
-#[cfg(target_os = "android")]
 #[no_mangle]
 fn android_main(app: AndroidApp) {
     use winit::platform::android::EventLoopBuilderExtAndroid;
@@ -19,9 +15,11 @@ fn android_main(app: AndroidApp) {
         default_theme: eframe::Theme::Light,
         ..Default::default()
     };
-
-    launch_app(options).unwrap_or_else(|err| {
+    eframe::run_native(
+        "Dust DDS Shapes Demo",
+        options,
+        Box::new(|_cc| Box::new(dust_dds_shapes_demo::app::ShapesDemoApp::new())),
+    ).unwrap_or_else(|err| {
         log::error!("Failure while running EFrame application: {err:?}");
     });
 }
-
