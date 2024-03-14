@@ -5,6 +5,7 @@ pub mod shapes_type {
 use self::shapes_type::ShapeType;
 use super::shapes_widget::{GuiShape, MovingShapeObject, ShapesWidget};
 use dust_dds::{
+    configuration::{self, DustDdsConfiguration, DustDdsConfigurationBuilder},
     domain::{
         domain_participant::DomainParticipant, domain_participant_factory::DomainParticipantFactory,
     },
@@ -125,9 +126,14 @@ impl Planner {
 }
 
 impl ShapesDemoApp {
-    pub fn new() -> Self {
+    pub fn new(configuration: Option<DustDdsConfiguration>) -> Self {
         let domain_id = 0;
         let participant_factory = DomainParticipantFactory::get_instance();
+        if let Some(configuration) = configuration {
+            participant_factory
+                .set_configuration(configuration)
+                .unwrap();
+        }
         let participant = participant_factory
             .create_participant(domain_id, QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
@@ -341,9 +347,7 @@ impl eframe::App for ShapesDemoApp {
                             ui.end_row();
                             for shape_writer in self.writer_list.lock().unwrap().iter() {
                                 ui.label("writer");
-                                ui.label(
-                                    shape_writer.writer.get_topic().get_name(),
-                                );
+                                ui.label(shape_writer.writer.get_topic().get_name());
                                 ui.label(shape_writer.color());
                                 ui.label(reliability_kind(
                                     &shape_writer.writer.get_qos().unwrap().reliability.kind,
@@ -353,9 +357,7 @@ impl eframe::App for ShapesDemoApp {
                             ui.end_row();
                             for reader in self.reader_list.iter() {
                                 ui.label("reader");
-                                ui.label(
-                                    reader.get_topicdescription().get_name(),
-                                );
+                                ui.label(reader.get_topicdescription().get_name());
                                 ui.label("*");
                                 ui.label(reliability_kind(
                                     &reader.get_qos().unwrap().reliability.kind,
