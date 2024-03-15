@@ -13,7 +13,7 @@ description = "Dust DDS Shapes Demo"
 path = "src/lib.rs"
 
 [dependencies]
-dust_dds = { version = "0.8.2", path = "../dust-dds/dds"}
+dust_dds = { version = "0.8.2", git = "https://github.com/s2e-systems/dust-dds", branch = "master"}
 eframe = "0.26"
 image = { version = "0.24", features = ["png"] }
 
