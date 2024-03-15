@@ -1,5 +1,5 @@
 pub mod shapes_type {
-    include!("../../target/idl/shapes_type.rs");
+    include!("../target/idl/shapes_type.rs");
 }
 
 use self::shapes_type::ShapeType;
@@ -123,9 +123,8 @@ impl Planner {
         });
     }
 }
-
-impl ShapesDemoApp {
-    pub fn new() -> Self {
+impl Default for ShapesDemoApp {
+    fn default() -> Self {
         let domain_id = 0;
         let participant_factory = DomainParticipantFactory::get_instance();
         let participant = participant_factory
@@ -154,7 +153,9 @@ impl ShapesDemoApp {
             planner,
         }
     }
+}
 
+impl ShapesDemoApp {
     fn create_writer(&mut self, shape_kind: String, color: &str, is_reliable: bool) {
         let topic_name = shape_kind.as_str();
 
@@ -185,10 +186,6 @@ impl ShapesDemoApp {
                 ..Default::default()
             }
         };
-        println!(
-            "Created {:?} writer with {:?} topic and color {:?}",
-            qos.reliability, topic_name, color
-        );
         let writer = self
             .publisher
             .create_datawriter(
@@ -341,9 +338,7 @@ impl eframe::App for ShapesDemoApp {
                             ui.end_row();
                             for shape_writer in self.writer_list.lock().unwrap().iter() {
                                 ui.label("writer");
-                                ui.label(
-                                    shape_writer.writer.get_topic().unwrap().get_name().unwrap(),
-                                );
+                                ui.label(shape_writer.writer.get_topic().get_name());
                                 ui.label(shape_writer.color());
                                 ui.label(reliability_kind(
                                     &shape_writer.writer.get_qos().unwrap().reliability.kind,
@@ -353,9 +348,7 @@ impl eframe::App for ShapesDemoApp {
                             ui.end_row();
                             for reader in self.reader_list.iter() {
                                 ui.label("reader");
-                                ui.label(
-                                    reader.get_topicdescription().unwrap().get_name().unwrap(),
-                                );
+                                ui.label(reader.get_topicdescription().get_name());
                                 ui.label("*");
                                 ui.label(reliability_kind(
                                     &reader.get_qos().unwrap().reliability.kind,
@@ -373,7 +366,7 @@ impl eframe::App for ShapesDemoApp {
 
             let mut shape_list = Vec::new();
             for reader in &self.reader_list {
-                let kind = reader.get_topicdescription().unwrap().get_name().unwrap();
+                let kind = reader.get_topicdescription().get_name();
                 let mut previous_handle = None;
                 while let Ok(samples) = reader.read_next_instance(
                     1,
