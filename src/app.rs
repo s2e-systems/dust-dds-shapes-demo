@@ -5,7 +5,6 @@ pub mod shapes_type {
 use self::shapes_type::ShapeType;
 use super::shapes_widget::{GuiShape, MovingShapeObject, ShapesWidget};
 use dust_dds::{
-    configuration::{self, DustDdsConfiguration, DustDdsConfigurationBuilder},
     domain::{
         domain_participant::DomainParticipant, domain_participant_factory::DomainParticipantFactory,
     },
@@ -124,16 +123,10 @@ impl Planner {
         });
     }
 }
-
-impl ShapesDemoApp {
-    pub fn new(configuration: Option<DustDdsConfiguration>) -> Self {
+impl Default for ShapesDemoApp {
+    fn default() -> Self {
         let domain_id = 0;
         let participant_factory = DomainParticipantFactory::get_instance();
-        if let Some(configuration) = configuration {
-            participant_factory
-                .set_configuration(configuration)
-                .unwrap();
-        }
         let participant = participant_factory
             .create_participant(domain_id, QosKind::Default, NoOpListener::new(), NO_STATUS)
             .unwrap();
@@ -160,7 +153,9 @@ impl ShapesDemoApp {
             planner,
         }
     }
+}
 
+impl ShapesDemoApp {
     fn create_writer(&mut self, shape_kind: String, color: &str, is_reliable: bool) {
         let topic_name = shape_kind.as_str();
 
@@ -191,10 +186,6 @@ impl ShapesDemoApp {
                 ..Default::default()
             }
         };
-        println!(
-            "Created {:?} writer with {:?} topic and color {:?}",
-            qos.reliability, topic_name, color
-        );
         let writer = self
             .publisher
             .create_datawriter(

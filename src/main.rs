@@ -3,8 +3,6 @@
 pub mod app;
 mod shapes_widget;
 
-use dust_dds::configuration::DustDdsConfigurationBuilder;
-
 fn main() -> Result<(), eframe::Error> {
     const ICON: &[u8] = include_bytes!("../res/logo.png");
     let icon = eframe::icon_data::from_png_bytes(ICON).expect("Failed to open icon");
@@ -18,13 +16,9 @@ fn main() -> Result<(), eframe::Error> {
         default_theme: eframe::Theme::Light,
         ..Default::default()
     };
-    let configuration = DustDdsConfigurationBuilder::new()
-        .interface_name(Some("Wi-Fi".to_string()))
-        .build()
-        .unwrap();
     eframe::run_native(
         "Dust DDS Shapes Demo",
         options,
-        Box::new(|_cc| Box::new(app::ShapesDemoApp::new(Some(configuration)))),
+        Box::new(|_cc| Box::<app::ShapesDemoApp>::default()),
     )
 }

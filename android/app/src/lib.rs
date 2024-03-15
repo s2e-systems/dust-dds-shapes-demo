@@ -18,7 +18,7 @@ fn android_main(app: AndroidApp) {
     eframe::run_native(
         "Dust DDS Shapes Demo",
         options,
-        Box::new(|_cc| Box::new(dust_dds_shapes_demo::app::ShapesDemoApp::new(None))),
+        Box::new(|_cc| Box::<dust_dds_shapes_demo::app::ShapesDemoApp>::default()),
     )
     .unwrap_or_else(|err| {
         log::error!("Failure while running EFrame application: {err:?}");
